@@ -1,0 +1,9 @@
+flask
+pickle-mixin
+pandas
+scipy
+mysql-connector-python==8.0.23
+numpy==1.18.5
+lime==0.2.0.1
+json5==0.9.5
+mpmath==1.1.0
