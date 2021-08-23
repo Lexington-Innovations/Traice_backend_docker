@@ -58,7 +58,7 @@ def hitlistout3(user):
     hit_list_out = pickle.load(open(PICKLED_DIR + '/hit_list_out.pkl', 'rb'))
     hit_list_out=hit_list_out.sort_values(['IA Risk Score'], ascending=[False])
     hit_list_out=hit_list_out[hit_list_out['IA Risk Score']>int(user)/100]
-    hit_list_out['IA Risk Score']=hit_list_out['IA Risk Score'].apply(lambda x:x*100)
+    #hit_list_out['IA Risk Score']=hit_list_out['IA Risk Score'].apply(lambda x:x*100)
     return (hit_list_out.to_json(orient="records")), 200
 
 @app.route('/hitlistout/<user>',methods=['GET'])
@@ -302,6 +302,16 @@ def predict():
     prediction=rf.predict_proba(x_unit_test_scales)[:,1]*100
     print('prediction4',prediction)
     return jsonify({'prediction': str(prediction[0])}), 200
+
+@app.route('/flag', methods=['GET', 'POST'])
+def flag():
+    if request.method == 'POST':
+        print('looooooooooollllllll',request.form['flag'])
+        df_frame=pd.DataFrame();
+        df_frame["flag"]=[request.form["flag"]]
+        df_frame["case_id"]=[request.form["case_id"]]
+        df_frame.to_csv('flagged_cases.csv', mode='a', header=False)
+    return "flagged record  added"
 
 if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True
