@@ -22,9 +22,9 @@ df_ia_agg_scored = pickle.load(open(PICKLED_DIR + '/df_ia_agg_scored.2.pkl', 'rb
 df=pickle.load(open(PICKLED_DIR + '/df_ia_agg.pkl', 'rb'))
 wellbeing1 = pickle.load(open(PICKLED_DIR + '/wellbeing.pkl', 'rb'))
 
-print(df_ia_agg_scored)
-print(type(df_ia_agg_scored))
-print('dsdfsdfsdfsdfsdfsfd',df_ia_agg_scored.to_dict('list'))
+###print(df_ia_agg_scored)
+##print(type(df_ia_agg_scored))
+##print('dsdfsdfsdfsdfsdfsfd',df_ia_agg_scored.to_dict('list'))
 @app.route('/hitlist')
 def hitlist():
     #hit_list.cast = hit_list.cast.apply(json.loads)
@@ -39,11 +39,13 @@ def branchbinned():
     piechart=branch_binned.groupby(['risk_bin']).count().reset_index()
     piechart['risk_bin']=piechart['risk_bin'].map(mydic)
     #del piechart['Branch #']
-    return (piechart[['risk_bin','Branch #']].to_json(orient="records")), 200
+    return (piechart[['risk_bin','IA ID Count']].to_json(orient="records")), 200
 
 @app.route('/branchbinned2')
 def branchbinned2():
     branch_binned2 = pickle.load(open(PICKLED_DIR + '/branch_binned2.pkl', 'rb'))
+    hit_list_expanded_out=pickle.load(open('./csvfiles/pickled/batch/hit_list_expanded_out.pkl','rb'))
+    branch_binned2=pd.merge(branch_binned2,hit_list_expanded_out, how="right", left_on=["Branch #"],right_on=["Branch #"])
     branch_binned2=branch_binned2.sort_values(['IA Risk Score'], ascending=[False])
     return (branch_binned2.to_json(orient="records")), 200
 
@@ -83,6 +85,10 @@ def cases():
     transaction_risk=transaction_risk.sort_values(['risk_score'],ascending=False)
     transaction_copy=transaction_risk
     transaction_copy['Workflow']=np.random.choice(["In Queue","In Progress", "Escalated","Closed"], transaction_copy.shape[0])
+    is_risky=pd.read_csv("./flagged_cases.csv")
+    is_risky=is_risky.drop_duplicates(keep='last')
+    transaction_copy=pd.merge(is_risky,transaction_copy, how="right", left_on=["case_id"],right_on=["ACCT_ID"])
+    transaction_copy['is_risky']=transaction_copy['flag']
     return (transaction_copy.to_json(orient="records")), 200
 
 
@@ -144,10 +150,10 @@ def closed():
 
 @app.route('/hitlistexpandedout/<user>', methods=['GET'])
 def hitlistexpandedout2(user):
-    #print('original hit list out expanded',hitlistexpandedout.head())
-    print('iaid of hitlistexpandedout is ',user)
+    ###print('original hit list out expanded',hitlistexpandedout.head())
+    ##print('iaid of hitlistexpandedout is ',user)
     hitlistexpandedout2=hit_list_expanded_out[hit_list_expanded_out['IA ID']==user]
-    print("done deal",type(hitlistexpandedout2.head()))        
+    ##print("done deal",type(hitlistexpandedout2.head()))        
     #wellbeing1[wellbeing1['IA ID']==user]
     return (hitlistexpandedout2.to_json(orient="records")), 200
 
@@ -173,10 +179,10 @@ def wellbeing():
 
 @app.route('/wellbeing2/<user>', methods=['GET'])
 def wellbeing2(user):
-    print("I'm in")
-    print('iaid is ',user)
+    ##print("I'm in")
+    ##print('iaid is ',user)
     wellbeing2=wellbeing1[wellbeing1['IA ID']==user]
-    print('passed',wellbeing2.head())
+    ##print('passed',wellbeing2.head())
 
     wellbeing2['fulfillment'] = np.where(wellbeing2['Value']>= 0.2, wellbeing2['Value'], wellbeing2['Value'].mean())
     wellbeing2['anxiety'] = np.where((wellbeing2['Value']>= 0.1) & (wellbeing2['Value']<= 0.2), wellbeing2['Value'], wellbeing2['Value'].mean())
@@ -191,7 +197,7 @@ def wellbeing2(user):
     wellbeing2['judgement']=wellbeing2['judgement'].apply(lambda x: m(x))
             
     #wellbeing1[wellbeing1['IA ID']==user]
-    print('boobooboo',wellbeing2[wellbeing2['IA ID']==user].head())
+    ##print('boobooboo',wellbeing2[wellbeing2['IA ID']==user].head())
     return (wellbeing2[wellbeing2['IA ID']==user].head().to_json(orient="records")), 200
 
 @app.route('/transaction/<name>', methods=['GET'])
@@ -223,7 +229,7 @@ def transaction(name):
             "Clients_With_More_Than_One_KYC_Change":"Excessive KYC changes"}
     l1=[]
     for i in why.columns:
-        #print(i,mydic[i])
+        ###print(i,mydic[i])
         l1.append(mydic[i])
     why.columns=l1
     import numpy as np
@@ -239,7 +245,7 @@ def transaction(name):
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
-    print('one')
+    ##print('one')
     login_json = request.get_json()
 
     if not login_json:
@@ -284,7 +290,7 @@ def predict():
 
     for each_categorical_value in unique_types:
         #x_unit_test[each_categorical_value]=0
-        #print(each_categorical_value)
+        ###print(each_categorical_value)
         if(x_unit_test['type'][0]==each_categorical_value):
             x_unit_test[each_categorical_value]=1
         else:
@@ -294,23 +300,23 @@ def predict():
        'oldbalanceDest', 'newbalanceDest','CASH_IN','PAYMENT', 'TRANSFER', 'CASH_OUT',
        'DEBIT']]
     x_unit_test.drop(columns=['type'],inplace=True)
-    print('prediction1',x_unit_test.head())
+    ##print('prediction1',x_unit_test.head())
     sc=pickle.load(open('../../traice_moneylaundering/scaler.pkl','rb'))
     x_unit_test_scales=sc.transform(x_unit_test)
     rf=pickle.load(open('../../traice_moneylaundering/GradientBoostingClassifier()_best_model.pkl','rb'))
-    print('prediction3',x_unit_test.head())
+    ##print('prediction3',x_unit_test.head())
     prediction=rf.predict_proba(x_unit_test_scales)[:,1]*100
-    print('prediction4',prediction)
+    ##print('prediction4',prediction)
     return jsonify({'prediction': str(prediction[0])}), 200
 
 @app.route('/flag', methods=['GET', 'POST'])
 def flag():
     if request.method == 'POST':
-        print('looooooooooollllllll',request.form['flag'])
+        ##print('looooooooooollllllll',request.form['flag'])
         df_frame=pd.DataFrame();
         df_frame["flag"]=[request.form["flag"]]
         df_frame["case_id"]=[request.form["case_id"]]
-        df_frame.to_csv('flagged_cases.csv', mode='a', header=False)
+        df_frame.to_csv('flagged_cases.csv', mode='a')
     return "flagged record  added"
 
 if __name__ == '__main__':
