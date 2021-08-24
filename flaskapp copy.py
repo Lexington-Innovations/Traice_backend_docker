@@ -301,9 +301,9 @@ def predict():
        'DEBIT']]
     x_unit_test.drop(columns=['type'],inplace=True)
     ##print('prediction1',x_unit_test.head())
-    sc=pickle.load(open('../../traice_moneylaundering/scaler.pkl','rb'))
+    sc=pickle.load(open('./traice_moneylaundering/scaler.pkl','rb'))
     x_unit_test_scales=sc.transform(x_unit_test)
-    rf=pickle.load(open('../../traice_moneylaundering/GradientBoostingClassifier()_best_model.pkl','rb'))
+    rf=pickle.load(open('./traice_moneylaundering/GradientBoostingClassifier()_best_model.pkl','rb'))
     ##print('prediction3',x_unit_test.head())
     prediction=rf.predict_proba(x_unit_test_scales)[:,1]*100
     ##print('prediction4',prediction)
