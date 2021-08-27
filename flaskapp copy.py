@@ -21,6 +21,62 @@ ia_kri_mapping_out = pickle.load(open(PICKLED_DIR + '/ia_kri_mapping_out.pkl', '
 df_ia_agg_scored = pickle.load(open(PICKLED_DIR + '/df_ia_agg_scored.2.pkl', 'rb'))
 df=pickle.load(open(PICKLED_DIR + '/df_ia_agg.pkl', 'rb'))
 wellbeing1 = pickle.load(open(PICKLED_DIR + '/wellbeing.pkl', 'rb'))
+mydic={"Unnamed: 0":"Sno",
+      "flag":"flag",
+      "case_id":"Case ID",
+      "BIZ_DATE":"Business Date",
+      "ACCT_ID":"Account ID",
+      "IA_NAME":"Investment Advisor Name",
+      "PRO_ACCOUNT":"Pro Account",
+      "KYC_HASH":"KYC HASH",
+      "ACCT_DATE":"Account Date",
+      "WM_PHY_BRANCH_REGION":"Branch Region",
+      "TRD_TRADE_ID":"Trade ID",
+      "BUY_SELL_INDICATOR":"Buy Sell Indicator",
+      "QUANTITY":"Quantity",
+      "TRD_BIZ_DATE":"Trade Business Date",
+      "WM_PHYSICAL_BRANCH_ID":"Physical Branch ID",
+      "WM_PHY_BRANCH_NAME":"Physical Branch Name",
+      "RR_BRANCH_NUM":"Regional Branch Number",
+      "TRD_TRANE_ID":"Trade Transaction Id",
+      "CANCEL_INDICATOR":"Cancel Indicator",
+      "SEC_SECURITY_ID":"Security ID",
+      "TRADE_IA_NAME":"Trade Investment Advisor Name",
+      "TRD_COMMISSION":"Trade Com",
+      "SETTLEMENT_CURRENCY":"USD",
+      "AMOUNT":"Amount",
+      "ORDER_TYPE":"Order Type",
+      "ORDER_TYPE_AMOUNT":"Order Type Amount",
+      "IDENTIFIER_TYPE":"Identifier Type",
+      "TRD_MONTH":"Trades This Month",
+      "Trades_TM":"Trades this month",
+      "Trades_AllTime":"Trades All Time",
+      "Pro_Trades_TM":"Pro Trades This Month",
+      "Pro_Trades_AllTime":"Pro Trades All Time",
+      "Cancelled_Trades_TM":"Cancelled Trades this month",
+      "Cancelled_Trades_AllTime":"Cancelled Trades All Time",
+      "Complaints_TM":"Complaints This Month",
+      "Complaints_AllTime":"Comoplaints All Time",
+      "Commission_TM":"Commission This Month",
+      "Commission_12M":"Commission This Year",
+      "Trades_Under_Different_IA_TM":"Trades under Different Investment Advisor This Month",
+      "Trades_Under_Different_IA_12M":"Trades under Different Investment Advisor This Year",
+      "Order_type_MARKET_count_under_IA_TM":"Order type Market Count under Investment Advisor This month",
+      "Order_type_MARKET_count_under_IA_12M":"Order type Market Count under Investment Advisor This year",
+      "Order_type_LIMIT_count_under_IA_TM":"Order type Limit this year",
+      "Order_type_LIMIT_count_under_IA_12M":"Order type Limit",
+      "Order_type_STOP_count_under_IA_TM":"Order type stop count under Investment this month",
+      "Order_type_STOP_count_under_IA_12M":"Order type stop count under Investment this year",
+      "Clients_With_More_Than_One_KYC_Change":"Clients with More than One KYC Change",
+      "AMOUNT_TM":"Amount this month",
+      "AMOUNT_12M":"Amount this year",
+      "TRD_COMMISSION_TM":"Trade Commission this month",
+      "TRD_COMMISSION_12M":"Trade Commission this Year",
+      "score":"Score",
+      "risk_score":"Risk Score",
+      "Workflow":"Workflow Status",
+      "is_risky":"Risky"
+                        }
 
 ###print(df_ia_agg_scored)
 ##print(type(df_ia_agg_scored))
@@ -91,6 +147,81 @@ def cases():
     transaction_copy['is_risky']=transaction_copy['flag']
     return (transaction_copy.to_json(orient="records")), 200
 
+@app.route('/cases/renamed')
+def cases2():
+    df2=pickle.load(open('./csvfiles/pickled/batch/acct_trades.pkl', 'rb'))
+    df3=pickle.load(open('./csvfiles/pickled/batch/df_ia_agg_scored.pkl', 'rb'))
+    df3['IA_NAME']=df3.index
+    df3.reset_index(drop=True,inplace=True)
+    df2['IA_NAME']=df2.IA_NAME.apply(lambda x:x.strip())
+    transaction_risk=pd.merge(df2, df3, how="right", on=['IA_NAME', 'IA_NAME'])
+    transaction_risk=transaction_risk.sort_values(['risk_score'],ascending=False)
+    transaction_copy=transaction_risk
+    transaction_copy['Workflow']=np.random.choice(["In Queue","In Progress", "Escalated","Closed"], transaction_copy.shape[0])
+    is_risky=pd.read_csv("./flagged_cases.csv")
+    is_risky=is_risky.drop_duplicates(keep='last')
+    transaction_copy=pd.merge(is_risky,transaction_copy, how="right", left_on=["case_id"],right_on=["ACCT_ID"])
+    transaction_copy['is_risky']=transaction_copy['flag']
+    mydic={"Unnamed: 0":"Sno",
+      "flag":"flag",
+      "case_id":"Case ID",
+      "BIZ_DATE":"Business Date",
+      "ACCT_ID":"Account ID",
+      "IA_NAME":"Investment Advisor Name",
+      "PRO_ACCOUNT":"Pro Account",
+      "KYC_HASH":"KYC HASH",
+      "ACCT_DATE":"Account Date",
+      "WM_PHY_BRANCH_REGION":"Branch Region",
+      "TRD_TRADE_ID":"Trade ID",
+      "BUY_SELL_INDICATOR":"Buy Sell Indicator",
+      "QUANTITY":"Quantity",
+      "TRD_BIZ_DATE":"Trade Business Date",
+      "WM_PHYSICAL_BRANCH_ID":"Physical Branch ID",
+      "WM_PHY_BRANCH_NAME":"Physical Branch Name",
+      "RR_BRANCH_NUM":"Regional Branch Number",
+      "TRD_TRANE_ID":"Trade Transaction Id",
+      "CANCEL_INDICATOR":"Cancel Indicator",
+      "SEC_SECURITY_ID":"Security ID",
+      "TRADE_IA_NAME":"Trade Investment Advisor Name",
+      "TRD_COMMISSION":"Trade Com",
+      "SETTLEMENT_CURRENCY":"USD",
+      "AMOUNT":"Amount",
+      "ORDER_TYPE":"Order Type",
+      "ORDER_TYPE_AMOUNT":"Order Type Amount",
+      "IDENTIFIER_TYPE":"Identifier Type",
+      "TRD_MONTH":"Trades This Month",
+      "Trades_TM":"Trades this month",
+      "Trades_AllTime":"Trades All Time",
+      "Pro_Trades_TM":"Pro Trades This Month",
+      "Pro_Trades_AllTime":"Pro Trades All Time",
+      "Cancelled_Trades_TM":"Cancelled Trades this month",
+      "Cancelled_Trades_AllTime":"Cancelled Trades All Time",
+      "Complaints_TM":"Complaints This Month",
+      "Complaints_AllTime":"Comoplaints All Time",
+      "Commission_TM":"Commission This Month",
+      "Commission_12M":"Commission This Year",
+      "Trades_Under_Different_IA_TM":"Trades under Different Investment Advisor This Month",
+      "Trades_Under_Different_IA_12M":"Trades under Different Investment Advisor This Year",
+      "Order_type_MARKET_count_under_IA_TM":"Order type Market Count under Investment Advisor This month",
+      "Order_type_MARKET_count_under_IA_12M":"Order type Market Count under Investment Advisor This year",
+      "Order_type_LIMIT_count_under_IA_TM":"Order type Limit this year",
+      "Order_type_LIMIT_count_under_IA_12M":"Order type Limit",
+      "Order_type_STOP_count_under_IA_TM":"Order type stop count under Investment this month",
+      "Order_type_STOP_count_under_IA_12M":"Order type stop count under Investment this year",
+      "Clients_With_More_Than_One_KYC_Change":"Clients with More than One KYC Change",
+      "AMOUNT_TM":"Amount this month",
+      "AMOUNT_12M":"Amount this year",
+      "TRD_COMMISSION_TM":"Trade Commission this month",
+      "TRD_COMMISSION_12M":"Trade Commission this Year",
+      "score":"Score",
+      "risk_score":"Risk Score",
+      "Workflow":"Workflow Status",
+      "is_risky":"Risky"
+    }
+    transaction_copy.rename(columns=mydic,inplace=True)
+    transaction_copy.reset_index(drop=True, inplace=True)
+
+    return (transaction_copy.to_json(orient="records")), 200
 
 @app.route('/cases/inprogress')
 def inprogress():
@@ -104,6 +235,8 @@ def inprogress():
     transaction_copy=transaction_risk
     transaction_copy['Workflow']=np.random.choice(["In Queue","In Progress", "Escalated","Closed"], transaction_copy.shape[0])
     transaction_copy=transaction_copy[transaction_copy['Workflow']=="In Progress"]
+    transaction_copy.rename(columns=mydic,inplace=True)
+    transaction_copy.reset_index(drop=True, inplace=True)
     return (transaction_copy.to_json(orient="records")), 200
 
 @app.route('/cases/inqueue')
@@ -118,6 +251,8 @@ def inqueue():
     transaction_copy=transaction_risk
     transaction_copy['Workflow']=np.random.choice(["In Queue","In Progress", "Escalated","Closed"], transaction_copy.shape[0])
     transaction_copy=transaction_copy[transaction_copy['Workflow']=="In Queue"]
+    transaction_copy.rename(columns=mydic,inplace=True)
+    transaction_copy.reset_index(drop=True, inplace=True)
     return (transaction_copy.to_json(orient="records")), 200
 
 @app.route('/cases/escalated')
@@ -132,6 +267,8 @@ def escalated():
     transaction_copy=transaction_risk
     transaction_copy['Workflow']=np.random.choice(["In Queue","In Progress", "Escalated","Closed"], transaction_copy.shape[0])
     transaction_copy=transaction_copy[transaction_copy['Workflow']=="Escalated"]
+    transaction_copy.rename(columns=mydic,inplace=True)
+    transaction_copy.reset_index(drop=True, inplace=True)
     return (transaction_copy.to_json(orient="records")), 200
 
 @app.route('/cases/closed')
@@ -146,6 +283,8 @@ def closed():
     transaction_copy=transaction_risk
     transaction_copy['Workflow']=np.random.choice(["In Queue","In Progress", "Escalated","Closed"], transaction_copy.shape[0])
     transaction_copy=transaction_copy[transaction_copy['Workflow']=="Closed"]
+    transaction_copy.rename(columns=mydic,inplace=True)
+    transaction_copy.reset_index(drop=True, inplace=True)
     return (transaction_copy.to_json(orient="records")), 200
 
 @app.route('/hitlistexpandedout/<user>', methods=['GET'])
